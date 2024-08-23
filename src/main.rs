@@ -18,8 +18,6 @@ impl GraphApp {
     fn name() -> &'static str {
         "GraphApp"
     }
-
-
 }
 
 
@@ -35,7 +33,17 @@ impl eframe::App for GraphApp {
             let painter = ui.painter();
             let (hover_pos, any_down) =
                 ctx.input(|input| (input.pointer.hover_pos(), input.pointer.any_down()));
-            
+
+            if let Some(pos) = hover_pos {
+                if any_down {
+                    for vertex in &mut self.vertices {
+                        if vertex.pos.distance(pos) < 20.0 {
+                            vertex.pos = pos;
+                            break;
+                        }
+                    }
+                }
+            }        
            
             for edge in &self.edges {
                 painter.line_segment([edge.start, edge.end], (1.0, Color32::WHITE));
@@ -69,8 +77,24 @@ fn main() -> eframe::Result<()> {
 
     let center = Pos2::new(200.0, 200.0);
     let radius = 150.0;
-    let n = 15;
-    let (vertices, edges) = layout::circle_plot(n, radius, center);
+    
+    let adj_list = vec![
+        vec![1, 2, 3, 4],
+        vec![0, 3, 4, 5],
+        vec![0, 5, 6],
+        vec![0, 1, 6, 7, 8],
+        vec![0, 1, 9],
+        vec![1, 2, 9, 10],
+        vec![2, 3, 10, 11],
+        vec![3, 11],
+        vec![3, 11],
+        vec![4, 5, 10],
+        vec![5, 6, 9],
+        vec![6, 7, 8],
+    ];   
+
+
+    let (vertices, edges) = layout::circle_plot(adj_list, radius, center);
 
     for vertex in vertices {
         app.vertices.push(vertex);
