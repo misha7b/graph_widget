@@ -5,6 +5,8 @@ use eframe::egui;
 use egui::{Color32, Pos2};
 use elements::{Vertex, Edge};
 
+use nalgebra::DMatrix;
+
 #[derive(Default)]
 struct GraphApp {
 
@@ -50,7 +52,7 @@ impl eframe::App for GraphApp {
             }   
 
             for vertex in &self.vertices {
-                painter.circle_filled(vertex.pos, 5.0, Color32::from_rgb(74, 178, 191));
+                painter.circle_filled(vertex.pos, 5.0, vertex.colour);
             }
 
             ui.label(format!("{:?}", hover_pos));
@@ -65,7 +67,6 @@ impl eframe::App for GraphApp {
     }
 }
 
-
 fn main() -> eframe::Result<()> {
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size((400.0, 400.0)),
@@ -74,27 +75,22 @@ fn main() -> eframe::Result<()> {
 
     let mut app = GraphApp::default();
 
-
     let center = Pos2::new(200.0, 200.0);
     let radius = 150.0;
     
     let adj_list = vec![
-        vec![1, 2, 3, 4],
-        vec![0, 3, 4, 5],
-        vec![0, 5, 6],
-        vec![0, 1, 6, 7, 8],
-        vec![0, 1, 9],
-        vec![1, 2, 9, 10],
-        vec![2, 3, 10, 11],
-        vec![3, 11],
-        vec![3, 11],
-        vec![4, 5, 10],
-        vec![5, 6, 9],
-        vec![6, 7, 8],
-    ];   
+        vec![1, 2],
+        vec![0, 2],
+        vec![0, 1, 3],
+        vec![2, 4, 6],
+        vec![3, 5],
+        vec![4, 6],
+        vec![3, 5],
+    ];
 
-
-    let (vertices, edges) = layout::circle_plot(adj_list, radius, center);
+    let laplacian = calc_laplacian(&adj_list);
+    
+    let (vertices, edges) = layout::circle_plot(&adj_list, radius, center);
 
     for vertex in vertices {
         app.vertices.push(vertex);
@@ -108,10 +104,36 @@ fn main() -> eframe::Result<()> {
     //app.edges.push(Edge { start: Pos2::new(200.0, 200.0), end: Pos2::new(300.0, 300.0) });
     //app.edges.push(Edge { start: Pos2::new(300.0, 300.0), end: Pos2::new(400.0, 400.0) });
 
-    
     eframe::run_native(
         GraphApp::name(),
         native_options,
         Box::new(|_| Box::new(app)),
     )
+}
+
+
+fn calc_laplacian(adj_lst: &Vec<Vec<usize>>) -> DMatrix<f32> {
+
+    let n = adj_lst.len();
+    let mut deg_matrix = DMatrix::zeros(n, n);
+    let mut deg_inv_sqrt = DMatrix::zeros(n, n);
+    let mut adj_matrix = DMatrix::zeros(n, n);
+    
+
+
+    for (i, neighbours) in adj_lst.iter().enumerate() {
+
+        let d = neighbours.len() as f32;
+        deg_matrix[(i, i)] = d;
+        deg_inv_sqrt[(i, i)] = 1.0 / d.sqrt();
+        for &j in neighbours {
+            adj_matrix[(i, j)] = 1.0;
+        }
+    
+    }
+    //let laplacian = deg_matrix - adj_matrix;
+    let norm_laplacian = &deg_inv_sqrt * (deg_matrix - adj_matrix) * &deg_inv_sqrt;
+    
+    norm_laplacian
+
 }
