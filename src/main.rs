@@ -5,7 +5,7 @@ use eframe::egui;
 use egui::{Color32, Pos2};
 use elements::{Vertex, Edge};
 
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, SymmetricEigen};
 
 #[derive(Default)]
 struct GraphApp {
@@ -33,9 +33,12 @@ impl eframe::App for GraphApp {
             }
 
             let painter = ui.painter();
+            
+            
             let (hover_pos, any_down) =
                 ctx.input(|input| (input.pointer.hover_pos(), input.pointer.any_down()));
 
+            /* 
             if let Some(pos) = hover_pos {
                 if any_down {
                     for vertex in &mut self.vertices {
@@ -45,7 +48,9 @@ impl eframe::App for GraphApp {
                         }
                     }
                 }
-            }        
+            }     
+            */
+            
            
             for edge in &self.edges {
                 painter.line_segment([edge.start, edge.end], (1.0, Color32::WHITE));
@@ -89,8 +94,19 @@ fn main() -> eframe::Result<()> {
     ];
 
     let laplacian = calc_laplacian(&adj_list);
-    
-    let (vertices, edges) = layout::circle_plot(&adj_list, radius, center);
+
+    let eigen = SymmetricEigen::new(laplacian.clone());
+    let eigenvalues = eigen.eigenvalues;
+    let eigenvectors = eigen.eigenvectors;
+
+    let mut eigenvalue_indices: Vec<usize> = (0..eigenvalues.len()).collect();
+    eigenvalue_indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+
+    let fiedler_vector = eigenvectors.column(eigenvalue_indices[1]).iter().cloned().collect();
+
+
+
+    let (vertices, edges) = layout::circle_plot(&adj_list, radius, center, &fiedler_vector);
 
     for vertex in vertices {
         app.vertices.push(vertex);
@@ -99,10 +115,6 @@ fn main() -> eframe::Result<()> {
     for edge in edges {
         app.edges.push(edge);
     }
-
-    //app.edges.push(Edge { start: Pos2::new(100.0, 100.0), end: Pos2::new(200.0, 200.0) });
-    //app.edges.push(Edge { start: Pos2::new(200.0, 200.0), end: Pos2::new(300.0, 300.0) });
-    //app.edges.push(Edge { start: Pos2::new(300.0, 300.0), end: Pos2::new(400.0, 400.0) });
 
     eframe::run_native(
         GraphApp::name(),
@@ -133,7 +145,10 @@ fn calc_laplacian(adj_lst: &Vec<Vec<usize>>) -> DMatrix<f32> {
     }
     //let laplacian = deg_matrix - adj_matrix;
     let norm_laplacian = &deg_inv_sqrt * (deg_matrix - adj_matrix) * &deg_inv_sqrt;
-    
+
     norm_laplacian
 
 }
+
+
+

@@ -2,7 +2,7 @@ use eframe::egui;
 use egui::Pos2;
 use crate::elements::{Vertex, Edge};
 
-pub fn circle_plot(adj_lst: &Vec<Vec<usize>>, radius: f32, center: Pos2) -> (Vec<Vertex>, Vec<Edge>) {
+pub fn circle_plot(adj_lst: &Vec<Vec<usize>>, radius: f32, center: Pos2, fiedler_vector: &Vec<f32>) -> (Vec<Vertex>, Vec<Edge>) {
     let n = adj_lst.len();
 
     let mut vertices = Vec::with_capacity(n);
@@ -14,7 +14,13 @@ pub fn circle_plot(adj_lst: &Vec<Vec<usize>>, radius: f32, center: Pos2) -> (Vec
         let angle = i as f32 * step;
         let x = center.x + radius * angle.cos();
         let y = center.y + radius * angle.sin();
-        vertices.push(Vertex { pos: Pos2::new(x, y), dragging: false, colour: egui::Color32::BLUE });
+        let node_colour = if fiedler_vector[i] < 0.0 {
+            egui::Color32::RED
+        } else {
+            egui::Color32::BLUE
+        };
+
+        vertices.push(Vertex { pos: Pos2::new(x, y), dragging: false, colour: node_colour });
     }
 
     for (i, neighbors) in adj_lst.iter().enumerate() {
