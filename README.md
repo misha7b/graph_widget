@@ -1,4 +1,4 @@
-Graph Visualization Widget
+## Graph Visualization Widget [WIP] ##
 
 # Dependencies
 
