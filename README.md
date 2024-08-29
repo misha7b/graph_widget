@@ -10,5 +10,7 @@ This project uses the following dependencies:
 
 ## Screenshots
 
-<img src="images/spring.png" alt="Screenshot" width="300"/>
-<img src="images/partition.png" alt="Screenshot" width="300"/>
+<div style="display: flex; justify-content: space-around;">
+    <img src="images/spring.png" alt="Screenshot" width="300"/>
+    <img src="images/partition.png" alt="Screenshot" width="300"/>
+</div>
