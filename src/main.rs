@@ -186,7 +186,7 @@ fn main() -> eframe::Result<()> {
     };
 
 
-    let adj_matrix = read_matrix_from_file("karate.txt").expect("Failed to read matrix from file");
+    let adj_matrix = read_matrix_from_file("thurm.txt").expect("Failed to read matrix from file");
     
 
     let laplacian = calc_laplacian(&adj_matrix);

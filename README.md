@@ -8,5 +8,5 @@ This project uses the following dependencies:
 - **nalgebra**: For linear algebra operations.
 - **rand**: For generating random numbers.
 
-
-![Screenshot](partition.png)
+![Screenshot](images/spring.png)
+![Screenshot](images/partition.png)
