@@ -20,6 +20,10 @@ struct GraphApp {
     adj_matrix: DMatrix<f32>,
     laplacian: DMatrix<f32>,
     dragged_vertex: Option<usize>,
+    paused: bool,
+    damping_factor: f32,
+    rest_length: f32, 
+    k: f32,
     
 
 }
@@ -60,11 +64,37 @@ impl GraphApp {
     }
 
     fn reset_graph(&mut self) {
-        let (vertices, edges) = layout::circle_layout(&self.adj_matrix, 200.0, Pos2::new(300.0, 300.0));
+        let (vertices, edges) = layout::rand_layout(&self.adj_matrix, 600.0, 600.0);
         self.vertices = vertices;
         self.edges = edges;
         for vertex in &mut self.vertices {
             vertex.colour = Color32::WHITE;
+        }
+    }
+
+
+    fn calc_spring(&mut self) {
+
+        if self.paused {
+            return;
+        }
+
+    
+        for edge in &self.edges {
+            let start = edge.start;
+            let end = edge.end;
+    
+            let pos1 = self.vertices[start].pos;
+            let pos2 = self.vertices[end].pos;
+    
+            let delta = pos2 - pos1;
+            let distance = delta.length();
+            let force_magnitude = &self.k * (distance - &self.rest_length);
+    
+            let force = delta.normalized() * force_magnitude;
+    
+            self.vertices[start].pos += force * self.damping_factor;
+            self.vertices[end].pos -= force * self.damping_factor;
         }
     }
 
@@ -74,10 +104,13 @@ impl GraphApp {
 impl eframe::App for GraphApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 
+        self.calc_spring();
 
         egui::CentralPanel::default().show(ctx, |ui| {
 
-
+            if ui.button("Pause").clicked() {
+                self.paused = !self.paused;
+            }
         
             if ui.button("Quit").clicked() {
                 std::process::exit(0);
@@ -90,6 +123,10 @@ impl eframe::App for GraphApp {
             if ui.button("Partition Graph").clicked() {
                 self.partition_graph();
             }
+
+            ui.add(egui::Slider::new(&mut self.damping_factor, 0.0..=0.50).text("Damping Factor"));
+            ui.add(egui::Slider::new(&mut self.rest_length, 50.0..=300.0).text("Rest Length"));
+            ui.add(egui::Slider::new(&mut self.k, 0.01..=1.0).text("Spring Constant"));
 
             let painter = ui.painter();
             
@@ -154,7 +191,7 @@ fn main() -> eframe::Result<()> {
 
     let laplacian = calc_laplacian(&adj_matrix);
 
-    let (vertices, edges) = layout::spring_layout(&adj_matrix, 600.0, 600.0);
+    let (vertices, edges) = layout::rand_layout(&adj_matrix, 600.0, 600.0);
     //let (vertices, edges) = layout::circle_layout(&adj_matrix, 200.0, Pos2::new(300.0, 300.0));
 
     let mut app = GraphApp {
@@ -163,6 +200,10 @@ fn main() -> eframe::Result<()> {
         adj_matrix: adj_matrix,
         laplacian: laplacian,
         dragged_vertex: None,
+        paused: false,
+        damping_factor: 1.0, 
+        rest_length: 150.0, 
+        k: 0.1
 
     };
 
@@ -239,6 +280,8 @@ fn read_matrix_from_file<P: AsRef<Path>>(file_path: P) -> io::Result<DMatrix<f32
 
     Ok(DMatrix::from_vec(nrows, ncols, data))
 }
+
+
 
 
     

@@ -1,17 +1,13 @@
 use eframe::egui;
-use egui::Pos2;
+use egui::{Pos2};
 use crate::elements::{Vertex, Edge};
 use nalgebra::DMatrix;
 use rand::Rng;
 
-const C1: f32 = 2.0;
-const C2: f32 = 1.0;
-const C3: f32 = 1.0;
-const C4: f32 = 0.1;
-const M: usize = 100;
 
 
-pub fn spring_layout(adj_matrix: &DMatrix<f32>, width: f32, height: f32) -> (Vec<Vertex>, Vec<Edge>) {
+
+pub fn rand_layout(adj_matrix: &DMatrix<f32>, width: f32, height: f32) -> (Vec<Vertex>, Vec<Edge>) {
 
     let n = adj_matrix.nrows();
     let mut rng = rand::thread_rng();
@@ -31,16 +27,8 @@ pub fn spring_layout(adj_matrix: &DMatrix<f32>, width: f32, height: f32) -> (Vec
         }
     }
 
-    
-    
     (vertices, edges)
 }
-
-
-
-    
-
-
 
 
 pub fn circle_layout(adj_matrix: &DMatrix<f32>, radius: f32, center: Pos2) -> (Vec<Vertex>, Vec<Edge>) {
