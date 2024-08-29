@@ -1,6 +1,6 @@
-Graph Visualization Widget
+# Graph Visualization Widget [WIP] 
 
-# Dependencies
+## Dependencies
 
 This project uses the following dependencies:
 
