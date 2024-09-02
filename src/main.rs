@@ -24,6 +24,7 @@ struct GraphApp {
     damping_factor: f32,
     rest_length: f32, 
     k: f32,
+    window_size: (f32, f32),
     
 
 }
@@ -106,6 +107,20 @@ impl eframe::App for GraphApp {
 
         self.calc_spring();
 
+        for vertex in &mut self.vertices {
+            if vertex.pos.x < 0.0 {
+                vertex.pos.x = 0.0;
+            } else if vertex.pos.x > self.window_size.0 {
+                vertex.pos.x = self.window_size.0;
+            }
+
+            if vertex.pos.y < 0.0 {
+                vertex.pos.y = 0.0;
+            } else if vertex.pos.y > self.window_size.1 {
+                vertex.pos.y = self.window_size.1;
+            }
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
 
             if ui.button("Pause").clicked() {
@@ -180,8 +195,11 @@ impl eframe::App for GraphApp {
 }
 
 fn main() -> eframe::Result<()> {
+
+    let window_size = (600.0, 600.0);
+
     let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size((600.0, 600.0)),
+        viewport: egui::ViewportBuilder::default().with_inner_size(window_size),
         ..eframe::NativeOptions::default()
     };
 
@@ -191,7 +209,7 @@ fn main() -> eframe::Result<()> {
 
     let laplacian = calc_laplacian(&adj_matrix);
 
-    let (vertices, edges) = layout::rand_layout(&adj_matrix, 600.0, 600.0);
+    let (vertices, edges) = layout::rand_layout(&adj_matrix, window_size.0, window_size.1);
     //let (vertices, edges) = layout::circle_layout(&adj_matrix, 200.0, Pos2::new(300.0, 300.0));
 
     let mut app = GraphApp {
@@ -203,8 +221,8 @@ fn main() -> eframe::Result<()> {
         paused: false,
         damping_factor: 1.0, 
         rest_length: 150.0, 
-        k: 0.1
-
+        k: 0.1,
+        window_size: window_size,
     };
 
     for vertex in vertices {
